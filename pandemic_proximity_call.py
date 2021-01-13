@@ -81,6 +81,20 @@ def get_dnac_jwt_token(dnac_auth):
     return dnac_jwt_token
 
 
+def get_event_subscriptions(event_id, dnac_auth):
+    """
+    This function will find the event subscription for the {event_id}
+    :param event_id: Cisco DNA Center event id, example {NETWORK-CLIENTS-3-506}
+    :param dnac_auth: Cisco DNA Center auth token
+    :return: existing subscriptions info, or [] if none
+    """
+    url = DNAC_URL + '/dna/intent/api/v1/event/subscription?eventIds=' + event_id + '&limit=100'
+    header = {'content-type': 'application/json', 'x-auth-token': dnac_auth}
+    response = requests.get(url, headers=header, verify=False)
+    response_json = response.json()
+    return response_json
+
+
 def main():
     """
 
@@ -98,6 +112,28 @@ def main():
 
     # obtain a Cisco DNA Center auth token
     dnac_auth = get_dnac_jwt_token(DNAC_AUTH)
+
+    # verify we have existing event subscriptions
+    subscription_list = []
+    event_subscriptions = get_event_subscriptions(EVENT_ID, dnac_auth)
+
+    for sub in event_subscriptions:
+        details = sub['subscriptionEndpoints'][0]['subscriptionDetails']
+        subscription_list.append({'url': details['url'], 'name': details['name']})
+
+    print('\nExisting event "' + EVENT_ID + '" subscriptions found:')
+    print('{0:40} {1:80}'.format('Name', 'Destination URL'))
+    for sub in subscription_list:
+        print('{0:40} {1:80}'.format(sub['name'], sub['url']))
+
+    print('\nSubmitting a new pandemic proximity request will send the data to all of these destinations')
+
+    user_input = input('Do you want to continue? (y/n) ')
+    if user_input == 'n':
+        print('\nNo new pandemic proximity report has been requested')
+        return
+
+
 
     current_time = str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     print('\n"pandemic_proximity_call.py" App Run End, ', current_time)
