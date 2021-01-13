@@ -125,8 +125,10 @@ def main():
     """
     This application will:
     - retrieve existing REST destinations (webhooks) configured on Cisco DNA Center
+    - the webhook destination needs to be configured using the Cisco DNA Center user interface (if not existing)
+        System --> Settings --> Destinations
     - will find existing subscriptions for the event with the id {EVENT_ID}
-    - create new event subscription if not existing for the destination {WEBHOOK_URL}
+    - create new event subscription (if not existing) for the destination {WEBHOOK_URL}
     """
 
     # logging, debug level, to file {application_run.log}
