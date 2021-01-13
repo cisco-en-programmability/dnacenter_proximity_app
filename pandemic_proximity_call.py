@@ -41,6 +41,7 @@ from config import DNAC_URL, DNAC_PASS, DNAC_USER
 from config import EVENT_ID
 from config import SUBSCRIPTION_NAME
 from config import WEBHOOK_URL
+from config import username, DAYS, TIME_RESOLUTION
 
 urllib3.disable_warnings(InsecureRequestWarning)  # disable insecure https warnings
 
@@ -95,9 +96,36 @@ def get_event_subscriptions(event_id, dnac_auth):
     return response_json
 
 
+def client_proximity(client_username, days, resolution, dnac_auth):
+    """
+    This function will start the task to collect the client proximity info for the {client_username}
+    for {days} in the past, and a time resolution {resolution}. The data that will be generated will be sent to the
+    webhook destination subscribed to the event id {NETWORK-CLIENTS-3-506}.
+    Proximity is defined as presence on the same floor and building, at the same time with the specified client
+    :param client_username: client username
+    :param days: how many days in the past maximum 14
+    :param resolution: minimum time that will be reported for proximity, recommended 15 min, minimum 5 minutes
+    :param dnac_auth: Cisco DNA Center auth token
+    :return: execution id information
+    """
+    url = DNAC_URL + '/dna/intent/api/v1/client-proximity'
+    url += '?username=' + client_username
+    url += '&number_days=' + str(days)
+    url += '&time_resolution=' + str(resolution)
+    header = {'content-type': 'application/json', 'x-auth-token': dnac_auth}
+    response = requests.get(url, headers=header, verify=False)
+    response_json = response.json()
+    return response_json
+
+
 def main():
     """
-
+    This application will send an API call to retrieve the client proximity information using the client {username}
+    It will verify if webhook destinations have been configured for the event id {NETWORK-CLIENTS-3-506}
+    It will inform the user if not event notifications are configured or what the current destiantions.
+    All of the configured event destinations will receive the client proximity information
+    The app will also update the user if the Cisco DNA Center task of processing all the required data has been
+    successful, or is any errors.
     """
 
     # logging, debug level, to file {application_run.log}
@@ -121,6 +149,11 @@ def main():
         details = sub['subscriptionEndpoints'][0]['subscriptionDetails']
         subscription_list.append({'url': details['url'], 'name': details['name']})
 
+    if len(subscription_list) == 0:
+        print('\nNo subscription to the event "' + EVENT_ID + '" found, please subscribe to this event to receive the '
+                                                            'client proximity information')
+        return
+
     print('\nExisting event "' + EVENT_ID + '" subscriptions found:')
     print('{0:40} {1:80}'.format('Name', 'Destination URL'))
     for sub in subscription_list:
@@ -133,7 +166,28 @@ def main():
         print('\nNo new pandemic proximity report has been requested')
         return
 
+    # request the client proximity information
+    proximity_call_result = client_proximity(username, DAYS, TIME_RESOLUTION, dnac_auth)
+    try:
+        execution_error = proximity_call_result['bapiExtendedStatusDescription']
+        print('\nThe client proximity API call encountered an error:\n' + execution_error)
+        print('\nPlease try again in 10 minutes')
+        return
+    except:
+        pass
+    execution_url = proximity_call_result['executionStatusUrl']
 
+    # check the execution status in 30 seconds
+    time.sleep(30)
+
+    url = DNAC_URL + execution_url
+    header = {'content-type': 'application/json', 'x-auth-token': dnac_auth}
+    response = requests.get(url, headers=header, verify=False)
+    response_json = response.json()
+    execution_status = response_json['status']
+
+    print('\nClient Proximity API call status: ', execution_status)
+    print('The client proximity data will be sent to your webhook destination, when task completed. It may take up to 30 minutes for all the data to be collected')
 
     current_time = str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     print('\n"pandemic_proximity_call.py" App Run End, ', current_time)
