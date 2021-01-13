@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 
-Copyright (c) 2020 Cisco and/or its affiliates.
+Copyright (c) 2021 Cisco and/or its affiliates.
 
 This software is licensed to you under the terms of the Cisco Sample
 Code License, Version 1.1 (the "License"). You may obtain a copy of the
@@ -22,26 +22,27 @@ or implied.
 __author__ = "Gabriel Zapodeanu TME, ENB"
 __email__ = "gzapodea@cisco.com"
 __version__ = "0.1.0"
-__copyright__ = "Copyright (c) 2020 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2021 Cisco and/or its affiliates."
 __license__ = "Cisco Sample Code License, Version 1.1"
 
 
 # This file contains:
-# Webhook username and password
-
-WEBHOOK_URL = 'http://x.x.x.x:5000'
-
-WEBHOOK_USERNAME = 'username'
-WEBHOOK_PASSWORD = 'password'
+# Webhook URL
+WEBHOOK_URL = 'https://webhook_url'
 
 # Cisco DNA Center dnalive
-DNAC_URL = 'https://cisco_dna_center'
+DNAC_URL = 'https://dnac_url'
 DNAC_USER = 'username'
 DNAC_PASS = 'password'
 
+# Proximity API config params
 DAYS = 14  # number of days to search for contact tracing
-SHORT_TIME_EVENTS = 500  # wireless events maximum interval, in msec, to eliminate false positives
 TIME_RESOLUTION = 5  # 15 minutes time resolution
 
+username = 'gabiz'
 
-username = 'user'
+# Proximity API event and subscription
+EVENT_ID = 'NETWORK-CLIENTS-3-506'
+SUBSCRIPTION_NAME = 'Proximity Event Subscription'
+
+
