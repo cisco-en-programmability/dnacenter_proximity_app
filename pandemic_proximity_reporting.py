@@ -32,6 +32,7 @@ import os
 import time
 import datetime
 
+
 from fpdf import FPDF  # for creating pdf files
 
 from flask import Flask, request, abort, send_from_directory
@@ -86,6 +87,7 @@ def proximity_webhook():
         print(webhook_json)
 
         # create reports with the data received
+
         proximity_details = webhook_json['details']
         username = proximity_details['user_name']
         time_resolution = proximity_details['time_resolution']
@@ -96,14 +98,20 @@ def proximity_webhook():
         end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(end_time_epoch/1000)))
         proximity_data = proximity_details['client_proximity']
 
+        # create a folder to save the reports to
+        current_time = str(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'))
+        folder_name = username + '-' + current_time
+        os.mkdir(folder_name)
+
         # create reports for each wireless client in the list of devices
         for data_set in proximity_data:
             wireless_mac_address = data_set['mac_address']
             client_info = data_set['client_info']
 
             # create report for proximity time for each client
-            # data structure
+            # data structure that will be used:
             # user_info: client_mac, username, device type, total time in proximity of pandemic positive employee
+
             users_list_time = []
             users_unique_list = set()
             # loop through all time intervals, collect all wireless clients and length of time in proximity
@@ -126,11 +134,22 @@ def proximity_webhook():
                             'client_mac': user['client_mac'], 'client_user': user['client_user'],
                             'client_type': user['client_type']
                         }
-                total_time_dhms = str(datetime.timedelta(seconds=int(total_time/1000)))
-                user_details.update({'total_time': total_time_dhms})
+                user_details.update({'total_time': total_time})
                 users_list_total_time.append(user_details)
 
-        print(users_list_total_time)
+            # sort the list by using the total time (in msec)
+            sorted_users_total_time = sorted(users_list_total_time, key=lambda x: x['total_time'], reverse=True)
+
+            # convert the list to use the time in: days hh:mm:ss
+            for user in sorted_users_total_time:
+                total_time_dhms = str(datetime.timedelta(seconds=int(user['total_time']/1000)))
+                user['total_time'] = total_time_dhms
+
+            # save proximity tracing report by total time
+            filename = wireless_mac_address.replace(':','')
+            with open(folder_name + '/proximity_total_time_' + filename + '.json', 'w') as f:
+                for item in sorted_users_total_time:
+                    f.write("%s\n" % item)
 
         # send the response message
         return 'Webhook Received', 202
