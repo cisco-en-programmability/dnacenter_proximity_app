@@ -159,6 +159,11 @@ def main():
     for sub in subscription_list:
         print('{0:40} {1:80}'.format(sub['name'], sub['url']))
 
+    print('\nA new client proximity data will be generated for:')
+    print('{0:30} {1:20}'.format('User:', username))
+    print('{0:30} {1:20}'.format('Number of Days:', str(DAYS)))
+    print('{0:30} {1:20}'.format('Time Resolution (minutes):', str(TIME_RESOLUTION)))
+
     print('\nSubmitting a new pandemic proximity request will send the data to all of these destinations')
 
     user_input = input('Do you want to continue? (y/n) ')
@@ -178,7 +183,7 @@ def main():
     execution_url = proximity_call_result['executionStatusUrl']
 
     # check the execution status in 30 seconds
-    time.sleep(30)
+    time.sleep(15)
 
     url = DNAC_URL + execution_url
     header = {'content-type': 'application/json', 'x-auth-token': dnac_auth}
