@@ -109,7 +109,7 @@ def proximity_webhook():
             client_info = data_set['client_info']
 
             # create report for proximity time for each client
-            # data structure that will be used:
+            # data structure that will be used to report:
             # user_info: client_mac, username, device type, total time in proximity of pandemic positive employee
 
             users_list_time = []
@@ -130,10 +130,13 @@ def proximity_webhook():
                 for user in users_list_time:
                     if unique_user == user['client_mac']:
                         total_time += user['time_length']
-                        user_details = {
-                            'client_mac': user['client_mac'], 'client_user': user['client_user'],
-                            'client_type': user['client_type']
-                        }
+                        try:
+                            user_details = {
+                                'client_mac': user['client_mac'], 'client_user': user['client_user'],
+                                'client_type': user['client_type']
+                            }
+                        except:
+                            pass
                 user_details.update({'total_time': total_time})
                 users_list_total_time.append(user_details)
 
@@ -149,6 +152,64 @@ def proximity_webhook():
             filename = wireless_mac_address.replace(':','')
             with open(folder_name + '/proximity_total_time_' + filename + '.json', 'w') as f:
                 for item in sorted_users_total_time:
+                    f.write("%s\n" % item)
+
+            print('Total time for each employee in proximity report completed')
+
+            # report for pandemic employee dwell time at each floor/location
+            employee_dwell_info = []
+
+            for time_slice in client_info:
+                employee_dwell_info.append({
+                                               'location': time_slice['location'],
+                                               'start_time': time_slice['start_time'],
+                                               'end_time': time_slice['end_time']
+                                           })
+
+            employee_dwell_time = []
+
+            last_start_timestamp = employee_dwell_info[0]['start_time']
+            last_end_timestamp = employee_dwell_info[0]['start_time']
+            last_location = employee_dwell_info[0]['location']
+            for time_slice in employee_dwell_info:
+                if last_location == time_slice['location']:
+                    if last_end_timestamp == time_slice['start_time']:
+                        last_end_timestamp = time_slice['end_time']
+                    else:
+                        employee_dwell_time.append({
+                                                       'location': last_location, 'start_time': last_start_timestamp,
+                                                       'end_time': last_end_timestamp
+                                                   })
+                        last_start_timestamp = time_slice['start_time']
+                        last_end_timestamp = time_slice['end_time']
+                        last_location = time_slice['location']
+                else:
+                    employee_dwell_time.append({
+                        'location': last_location, 'start_time': last_start_timestamp,
+                        'end_time': last_end_timestamp
+                    })
+                    last_start_timestamp = time_slice['start_time']
+                    last_end_timestamp = time_slice['end_time']
+                    last_location = time_slice['location']
+            employee_dwell_time.append({
+                'location': last_location, 'start_time': last_start_timestamp,
+                'end_time': last_end_timestamp
+            })
+
+            # convert timestamps to local time
+            for time_slice in employee_dwell_time:
+                start_time_local = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(int(time_slice[
+                                                                                             'start_time'])/1000)))
+                end_time_local = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(int(time_slice[
+                                                                                               'end_time'])/1000)))
+                time_slice.update({'start_time': start_time_local, 'end_time': end_time_local})
+
+            print('Employee dwell time at each location report completed')
+
+            # save employee dwell time report
+            filename = wireless_mac_address.replace(':', '')
+            with open(folder_name + '/dwell_total_time_' + filename + '.json', 'w') as f:
+                for item in employee_dwell_time:
                     f.write("%s\n" % item)
 
         # send the response message
