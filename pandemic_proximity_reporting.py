@@ -35,7 +35,7 @@ import datetime
 
 from fpdf import FPDF  # for creating pdf files
 
-from flask import Flask, request, abort, send_from_directory
+from flask import Flask, request, send_from_directory
 from flask_basicauth import BasicAuth
 
 from urllib3.exceptions import InsecureRequestWarning  # for insecure https warnings
@@ -46,7 +46,7 @@ time.tzset()  # adjust the timezone, more info https://help.pythonanywhere.com/p
 
 urllib3.disable_warnings(InsecureRequestWarning)  # disable insecure https warnings
 
-from config import WEBHOOK_URL, WEBHOOK_USERNAME, WEBHOOK_PASSWORD
+from config import WEBHOOK_USERNAME, WEBHOOK_PASSWORD
 
 
 app = Flask(__name__)
