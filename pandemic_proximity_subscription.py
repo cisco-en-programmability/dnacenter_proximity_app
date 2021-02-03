@@ -30,7 +30,6 @@ import requests
 import urllib3
 import datetime
 import json
-import time
 import logging
 
 from urllib3.exceptions import InsecureRequestWarning  # for insecure https warnings
@@ -54,16 +53,6 @@ def pprint(json_data):
     :return:
     """
     print(json.dumps(json_data, indent=4, separators=(' , ', ' : ')))
-
-
-def get_epoch_time(timestamp):
-    """
-    This function will return the epoch time for the {timestamp}, UTC time format, for current time
-    :param timestamp: timestamp in UTC format or none
-    :return: epoch time including msec
-    """
-    epoch = time.time()*1000
-    return int(epoch)
 
 
 def get_dnac_jwt_token(dnac_auth):

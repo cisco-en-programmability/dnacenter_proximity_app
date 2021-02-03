@@ -39,14 +39,11 @@ from datetime import datetime
 
 from config import DNAC_URL, DNAC_PASS, DNAC_USER
 from config import EVENT_ID
-from config import SUBSCRIPTION_NAME
-from config import WEBHOOK_URL
 from config import username, DAYS, TIME_RESOLUTION
 
 urllib3.disable_warnings(InsecureRequestWarning)  # disable insecure https warnings
 
 DNAC_AUTH = HTTPBasicAuth(DNAC_USER, DNAC_PASS)
-
 
 
 def pprint(json_data):
@@ -56,16 +53,6 @@ def pprint(json_data):
     :return:
     """
     print(json.dumps(json_data, indent=4, separators=(' , ', ' : ')))
-
-
-def get_epoch_time(timestamp):
-    """
-    This function will return the epoch time for the {timestamp}, UTC time format, for current time
-    :param timestamp: timestamp in UTC format or none
-    :return: epoch time including msec
-    """
-    epoch = time.time()*1000
-    return int(epoch)
 
 
 def get_dnac_jwt_token(dnac_auth):
@@ -122,7 +109,7 @@ def main():
     """
     This application will send an API call to retrieve the client proximity information using the client {username}
     It will verify if webhook destinations have been configured for the event id {NETWORK-CLIENTS-3-506}
-    It will inform the user if not event notifications are configured or what the current destiantions.
+    It will inform the user if not event notifications are configured or what the current destinations.
     All of the configured event destinations will receive the client proximity information
     The app will also update the user if the Cisco DNA Center task of processing all the required data has been
     successful, or is any errors.
